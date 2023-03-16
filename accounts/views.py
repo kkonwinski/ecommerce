@@ -1,34 +1,23 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
+from .forms import LoginForm, RegisterForm
 
-# Create your views here.
+# Display the login page
 def login_page(request):
     return render(request, 'accounts/login.html')
 
-
+# Handle the registration process
 def register_page(request):
+    register_form = RegisterForm()
     if request.method == 'POST':
-        first_name = request.POST['first_name']
-        last_name = request.POST['last_name']
-        email = request.POST['email']
-        password = request.POST['password']
+        register_form = RegisterForm(request.POST)
+        if register_form.is_valid():
+            user = register_form.save(commit=False)
+            user.username='{} {}'.format(register_form.cleaned_data['first_name'], register_form.cleaned_data['last_name'])
+            user.set_password(register_form.cleaned_data['password1'])
+            user.save()
+            messages.success(request, 'Your account has been created. Please login.')
+            return HttpResponseRedirect('login')
 
-        # Check if user already exists
-        if User.objects.filter(username=email).exists():
-            messages.error(request, 'User already exists')
-            return redirect('register')
-
-        # Create user object
-        user = User.objects.create_user(
-            username=email,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            password=password
-        )
-
-        messages.success(request, 'Your account has been created. Please login.')
-        return redirect('login')
-
-    return render(request, 'accounts/register.html')
+    return render(request, 'accounts/register.html', {'form': register_form})

@@ -4,16 +4,16 @@ from django.contrib.auth.models import User
 
 
 class LoginForm(forms.Form):
-    email = forms.EmailField(required=True)
+    email_field = forms.EmailField(required=True)
     password = forms.CharField(widget=forms.PasswordInput())
 
     def clean(self):
         cleaned_data = super().clean()
-        email = cleaned_data.get('email')
+        email = cleaned_data.get('email_field')
         password = cleaned_data.get('password')
 
         if email and password:
-            user = User.objects.filter(username=email).first()
+            user = User.objects.filter(email=email).first()
 
             if not user:
                 raise forms.ValidationError('Invalid email or password')
@@ -26,10 +26,14 @@ class LoginForm(forms.Form):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
+    first_name = forms.CharField(required=True)
+    last_name = forms.CharField(required=True)
+    password1 = forms.CharField(widget=forms.PasswordInput(), label='Password')
+    password2 = forms.CharField(widget=forms.PasswordInput(), label='Confirm Password')
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'password']
+        fields = ['first_name', 'last_name', 'email', 'password1', 'password2']
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
